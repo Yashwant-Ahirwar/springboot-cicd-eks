@@ -1,0 +1,6 @@
+**/target
+**/.idea
+**/.mvn
+**/.git
+**/.DS_Store
+**/*.iml
