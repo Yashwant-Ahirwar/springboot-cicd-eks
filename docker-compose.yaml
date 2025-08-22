@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    ports:
+      - "8080:8080"    # Jenkins UI
+      - "50000:50000"  # Jenkins agent port
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock   # Jenkins builds Docker images using host Docker
+      - ~/.kube:/root/.kube                         # Share kubeconfig so Jenkins can talk to kind/minikube
+      - ./k8s:/k8s                                  # Mount local k8s manifests into Jenkins
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+
+#  mysql:
+#    image: mysql:8.0
+#    container_name: mysql
+#    restart: always
+#    environment:
+#      MYSQL_DATABASE: appdb
+#      MYSQL_USER: appuser
+#      MYSQL_PASSWORD: apppassword
+#      MYSQL_ROOT_PASSWORD: rootpassword
+#    ports:
+#      - "3306:3306"
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+
+volumes:
+  jenkins_home:
+#  mysql_data:
