@@ -44,5 +44,8 @@ jobs:
 
       - name: Push Image
         run: |
-          docker tag springboot-cicd-eks:latest ghcr.io/${{ github.repository }}/springboot-cicd-eks:latest
-          docker push ghcr.io/${{ github.repository }}/springboot-cicd-eks:latest
+          IMAGE_ID=ghcr.io/${{ github.repository }}/springboot-cicd-eks
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[:upper:]' '[:lower:]')   # enforce lowercase
+          docker tag springboot-cicd-eks:latest $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
+      
