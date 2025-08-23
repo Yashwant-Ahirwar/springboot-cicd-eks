@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: team-app
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - mysql.yaml          # ✅ single MySQL bundle
+  - deployment.yaml     # app
+  - service.yaml        # app service
+  - ingress.yaml

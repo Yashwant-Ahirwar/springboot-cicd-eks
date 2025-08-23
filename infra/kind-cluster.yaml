@@ -1,16 +1,24 @@
 # kind-cluster.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+
+# Tell containerd inside Kind nodes to trust localhost:5000 as a registry
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
+      endpoint = ["http://kind-registry:5000"]
+
 nodes:
   - role: control-plane
     extraPortMappings:
       - containerPort: 30000   # Map NodePort range for services
         hostPort: 30000
         protocol: TCP
-      - containerPort: 30080
-        hostPort: 30080
+      - containerPort: 30080   # Ingress inside Kind
+        hostPort: 80           # Directly map to host port 80
         protocol: TCP
   - role: worker
   - role: worker
 
-# This simulates a 3-node cluster (1 control-plane + 2 workers)
+# Simulates a 3-node cluster (1 control-plane + 2 workers)
+# Ingress apps are available at http://demo.local (no need for :30080)

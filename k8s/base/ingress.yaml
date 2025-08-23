@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: springboot-cicd-eks-ingress
+  namespace: team-app
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Optional: enforce HTTPS redirect if TLS is enabled
+    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  rules:
+    - host: demo.local     # 🔹 For local use (add to /etc/hosts -> 127.0.0.1 demo.local)
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: springboot-cicd-eks-svc
+                port:
+                  number: 80
+  # Optional TLS section for real domains
+  # tls:
+  #   - hosts:
+  #       - demo.example.com
+  #     secretName: demo-tls

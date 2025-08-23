@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springboot-cicd-eks
+  namespace: team-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: springboot-cicd-eks
+  template:
+    metadata:
+      labels:
+        app: springboot-cicd-eks
+    spec:
+      containers:
+        - name: app
+          image: docker.io/<user>/springboot-cicd-eks:0.0.1 # overridden by overlays
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: springboot-cicd-eks-config
+            - secretRef:
+                name: springboot-cicd-eks-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
