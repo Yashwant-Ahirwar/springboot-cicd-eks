@@ -3,79 +3,58 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: {}
-
-env:
-  AWS_REGION: ap-south-1
-  CLUSTER_NAME: team-app
-  IMAGE_NAME: springboot-cicd-eks
-  REGISTRY: ghcr.io/${{ github.repository_owner }}/springboot-cicd-eks
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      # 1. Checkout code
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    permissions:
+      contents: read
+      packages: write
 
-      # 2. Set up JDK
+    env:
+      AWS_REGION: ap-south-1
+      CLUSTER_NAME: team-app
+      IMAGE_NAME: springboot-cicd-eks
+      REGISTRY: ghcr.io/${{ github.repository_owner }}/springboot-cicd-eks
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # 3. Build Maven package
       - name: Build with Maven
-        run: mvn -B clean package -DskipTests
+        run: mvn clean package -DskipTests
 
-      # 4. Login to GitHub Container Registry
-      - name: Login to GHCR
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      # 5. Build and Push Docker Image
       - name: Build & Push Docker image
         run: |
           IMAGE_TAG=${{ github.sha }}
-          docker build -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
-          docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-          echo "IMAGE=$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" >> $GITHUB_ENV
+          IMAGE=$(echo "${REGISTRY}:${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
+          docker build -t $IMAGE .
+          docker push $IMAGE
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-  deploy-dev:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      # 1. Checkout repo
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # 2. Configure AWS credentials
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 3. Update kubeconfig for EKS
       - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
-      # 4. Install Kustomize
-      - name: Install Kustomize
+      - name: Deploy to EKS
         run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
-
-      # 5. Deploy to EKS (dev)
-      - name: Deploy to EKS (team-app-dev)
-        run: |
-          kustomize edit set image springboot-cicd-eks=${{ env.IMAGE }}
-          kubectl kustomize k8s/overlays/dev | kubectl apply -f -
+          kubectl set image deployment/springboot-cicd-eks springboot-cicd-eks=$IMAGE -n team-app
+          kubectl rollout status deployment/springboot-cicd-eks -n team-app
