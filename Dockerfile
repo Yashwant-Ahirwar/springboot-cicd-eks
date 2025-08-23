@@ -8,7 +8,7 @@ RUN mvn -q -DskipTests package                     # ✅ Builds the JAR
 
 
 # ====== Runtime stage ======
-FROM eclipse-temurin:17-jre                        # ✅ Lightweight JRE base image
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 ENV JAVA_OPTS=""
 COPY --from=build /app/target/app-0.0.1-SNAPSHOT.jar /app/app.jar
