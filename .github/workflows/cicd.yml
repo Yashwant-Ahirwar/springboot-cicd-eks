@@ -8,8 +8,8 @@ on:
 env:
   AWS_REGION: ap-south-1
   CLUSTER_NAME: team-app
-  REGISTRY: ghcr.io/${{ github.repository }}
   IMAGE_NAME: springboot-cicd-eks
+  REGISTRY: ghcr.io/${{ github.repository_owner }}/springboot-cicd-eks
 
 jobs:
   build:
