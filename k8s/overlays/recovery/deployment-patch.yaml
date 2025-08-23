@@ -8,5 +8,4 @@ spec:
     spec:
       containers:
         - name: app
-          image: localhost:5000/demo-app:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/yashwant-ahirwar/springboot-cicd-eks:prod-REPLACE_SHA

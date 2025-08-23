@@ -1,0 +1,48 @@
+pipeline {
+  agent any
+  options { timestamps() }
+  environment {
+  APP_NAME    = 'springboot-cicd-eks'
+  REGISTRY    = 'ghcr.io/yashwant-ahirwar'
+  IMAGE_TAG   = "${env.GIT_COMMIT}"
+  AWS_REGION  = 'ap-south-1'
+  CLUSTER_NAME= 'YOUR_EKS_CLUSTER_NAME'
+  }
+  stages {
+  stage('Checkout') { steps { checkout scm } }
+  stage('Build & Push Image') {
+  steps {
+  sh '''
+  docker build -t $REGISTRY/$APP_NAME:$IMAGE_TAG -f app/Dockerfile .
+  echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+  docker push $REGISTRY/$APP_NAME:$IMAGE_TAG
+  '''
+  }
+  }
+  stage('Deploy to Dev') {
+  steps {
+  sh '''
+  kubectl kustomize k8s/overlays/dev | \
+  sed "s#ghcr.io/yashwant-ahirwar/springboot-cicd-eks:dev-latest#$REGISTRY/$APP_NAME:$IMAGE_TAG#g" | \
+  kubectl apply -f -
+  '''
+  }
+  }
+  stage('Promote to Stage?') { steps { input 'Promote to stage?' } }
+  stage('Deploy to Stage') {
+  steps { sh 'kubectl kustomize k8s/overlays/stage | kubectl apply -f -' }
+  }
+  stage('Promote to Prod?') { steps { input 'Promote to prod?' } }
+  stage('Deploy to Prod') {
+  steps {
+  sh '''
+  aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+  # patch prod image tag
+  kustomize build k8s/overlays/prod | \
+  sed "s#prod-REPLACE_SHA#$IMAGE_TAG#g" | \
+  kubectl apply -f -
+  '''
+  }
+  }
+  }
+}

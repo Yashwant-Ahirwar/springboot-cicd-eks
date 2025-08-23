@@ -1,49 +1,10 @@
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret
-  namespace: team-app
-type: Opaque
-stringData:
-  mysql-root-password: rootpassword
-  mysql-password: apppassword
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mysql-config
-  namespace: team-app
-data:
-  mysql-database: appdb
-  mysql-user: appuser
-  init.sql: |
-    CREATE DATABASE IF NOT EXISTS appdb;
-    CREATE USER IF NOT EXISTS 'appuser'@'%' IDENTIFIED BY 'apppassword';
-    GRANT ALL PRIVILEGES ON appdb.* TO 'appuser'@'%';
-    FLUSH PRIVILEGES;
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-pvc
-  namespace: team-app
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mysql
-  namespace: team-app
 spec:
   serviceName: mysql
   replicas: 1
-  podManagementPolicy: OrderedReady
   selector:
     matchLabels:
       app: mysql
@@ -84,27 +45,17 @@ spec:
             - name: mysql-initdb
               mountPath: /docker-entrypoint-initdb.d
       volumes:
-        - name: mysql-data
-          persistentVolumeClaim:
-            claimName: mysql-pvc
         - name: mysql-initdb
           configMap:
             name: mysql-config
             items:
               - key: init.sql
                 path: init.sql
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-  namespace: team-app
-spec:
-  type: ClusterIP
-  selector:
-    app: mysql
-  ports:
-    - name: mysql
-      port: 3306
-      targetPort: 3306
-      protocol: TCP
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

@@ -1,10 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: springboot-cicd-eks-config
-  namespace: team-app
+name: springboot-cicd-eks-config
 data:
-  SERVER_PORT: "8080"
-  DB_HOST: "mysql"
-  DB_PORT: "3306"
-  DB_NAME: "appdb"
+SERVER_PORT: "8080"
+DB_HOST: "mysql" # dev uses in-cluster MySQL; stage/prod patch to RDS endpoint
+DB_PORT: "3306"
+DB_NAME: "appdb"

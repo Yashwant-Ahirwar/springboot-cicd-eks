@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: team-app-dev
+nameSuffix: -dev
+resources:
+  - ../../base
+  - ../../components/mysql/configmap.yaml
+  - ../../components/mysql/pvc.yaml
+  - ../../components/mysql/statefulset.yaml
+  - ../../components/mysql/service.yaml
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - configmap-patch.yaml
+configMapGenerator: []
+secretGenerator: []
