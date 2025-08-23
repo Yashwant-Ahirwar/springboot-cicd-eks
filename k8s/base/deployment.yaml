@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/<user>/springboot-cicd-eks:0.0.1 # overridden by overlays
+          image: docker.io/yashwant/springboot-cicd-eks:0.0.1   # ✅ replace with your repo
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

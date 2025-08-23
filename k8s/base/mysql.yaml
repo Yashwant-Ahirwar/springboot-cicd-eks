@@ -17,6 +17,11 @@ metadata:
 data:
   mysql-database: appdb
   mysql-user: appuser
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS appdb;
+    CREATE USER IF NOT EXISTS 'appuser'@'%' IDENTIFIED BY 'apppassword';
+    GRANT ALL PRIVILEGES ON appdb.* TO 'appuser'@'%';
+    FLUSH PRIVILEGES;
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -38,6 +43,7 @@ metadata:
 spec:
   serviceName: mysql
   replicas: 1
+  podManagementPolicy: OrderedReady
   selector:
     matchLabels:
       app: mysql
@@ -75,10 +81,18 @@ spec:
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
             claimName: mysql-pvc
+        - name: mysql-initdb
+          configMap:
+            name: mysql-config
+            items:
+              - key: init.sql
+                path: init.sql
 ---
 apiVersion: v1
 kind: Service
