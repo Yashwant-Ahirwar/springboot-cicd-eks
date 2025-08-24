@@ -11,3 +11,4 @@ spec:
     - name: http
       port: 80         # exposed on LB
       targetPort: 8080 # app inside pod
+
