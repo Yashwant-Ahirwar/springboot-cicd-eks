@@ -45,17 +45,17 @@ jobs:
           docker push $IMAGE
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::945232394698:role/GitHubActions-EKS-Deploy
-          aws-region: ${{ env.AWS_REGION }}
+      # --- SKIPPED for GHCR-only testing ---
+      # - name: Configure AWS credentials (OIDC)
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: arn:aws:iam::945232394698:role/GitHubActions-EKS-Deploy
+      #     aws-region: ${{ env.AWS_REGION }}
 
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      # - name: Update kubeconfig
+      #   run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
-      - name: Deploy to EKS
-        run: |
-          kubectl set image deployment/springboot-cicd-eks springboot-cicd-eks=$IMAGE -n team-app
-          kubectl rollout status deployment/springboot-cicd-eks -n team-app
-          
+      # - name: Deploy to EKS
+      #   run: |
+      #     kubectl set image deployment/springboot-cicd-eks springboot-cicd-eks=$IMAGE -n team-app
+      #     kubectl rollout status deployment/springboot-cicd-eks -n team-app
