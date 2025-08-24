@@ -16,7 +16,7 @@ jobs:
       packages: write
 
     env:
-      AWS_REGION: ap-south-1
+      AWS_REGION: eu-north-1
       CLUSTER_NAME: team-app
       IMAGE_NAME: springboot-cicd-eks
       REGISTRY: ghcr.io/${{ github.repository_owner }}/springboot-cicd-eks
@@ -48,7 +48,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::945232394698:role/<GitHubActionsRole>
+          role-to-assume: arn:aws:iam::945232394698:role/GitHubActions-EKS-Deploy
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Update kubeconfig
