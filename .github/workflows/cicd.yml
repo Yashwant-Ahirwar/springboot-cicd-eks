@@ -40,22 +40,28 @@ jobs:
       - name: Build & Push Docker image
         run: |
           IMAGE_TAG=${{ github.sha }}
-          IMAGE=$(echo "${REGISTRY}:${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
-          docker build -t $IMAGE .
-          docker push $IMAGE
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          IMAGE_SHA=$(echo "${REGISTRY}:${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_LATEST=$(echo "${REGISTRY}:latest" | tr '[:upper:]' '[:lower:]')
 
-      # --- SKIPPED for GHCR-only testing ---
-      # - name: Configure AWS credentials (OIDC)
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     role-to-assume: arn:aws:iam::945232394698:role/GitHubActions-EKS-Deploy
-      #     aws-region: ${{ env.AWS_REGION }}
+          echo "Building and pushing $IMAGE_SHA and $IMAGE_LATEST"
 
-      # - name: Update kubeconfig
-      #   run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+          docker build -t $IMAGE_SHA -t $IMAGE_LATEST .
+          docker push $IMAGE_SHA
+          docker push $IMAGE_LATEST
 
-      # - name: Deploy to EKS
-      #   run: |
-      #     kubectl set image deployment/springboot-cicd-eks springboot-cicd-eks=$IMAGE -n team-app
-      #     kubectl rollout status deployment/springboot-cicd-eks -n team-app
+          # Save SHA tag for deployment
+          echo "IMAGE=$IMAGE_SHA" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::945232394698:role/GitHubActions-EKS-Deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+      - name: Deploy to EKS
+        run: |
+          kubectl set image deployment/springboot-cicd-eks springboot-cicd-eks=$IMAGE -n team-app
+          kubectl rollout status deployment/springboot-cicd-eks -n team-app

@@ -1,0 +1,32 @@
+name: EKS OIDC Connectivity Test
+
+on:
+  workflow_dispatch:   # run manually from GitHub Actions tab
+
+jobs:
+  test-eks:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write     # required for OIDC
+      contents: read
+
+    env:
+      AWS_REGION: eu-north-1
+      CLUSTER_NAME: team-app-cluster
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::945232394698:role/GitHubActions-EKS-Deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+      - name: Test kubectl access
+        run: kubectl get nodes

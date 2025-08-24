@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: springboot-cicd-eks
+  namespace: team-app
 spec:
   replicas: 1
   selector:
@@ -13,16 +14,16 @@ spec:
         app: springboot-cicd-eks
     spec:
       containers:
-        - name: app
-          image: REPLACE_IMAGE                        # patched per env
-          imagePullPolicy: IfNotPresent
+        - name: springboot-cicd-eks
+          image: ghcr.io/yashwant-ahirwar/springboot-cicd-eks:latest   # Always deploys latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
             - configMapRef:
                 name: springboot-cicd-eks-config
             - secretRef:
-                name: springboot-cicd-eks-secret      # provided per env
+                name: springboot-cicd-eks-secret
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
