@@ -4,10 +4,10 @@ metadata:
   name: springboot-cicd-eks-svc
   namespace: team-app
 spec:
-  type: ClusterIP
+  type: LoadBalancer   # <-- external access
   selector:
     app: springboot-cicd-eks
   ports:
     - name: http
-      port: 80
-      targetPort: 8080
+      port: 80         # exposed on LB
+      targetPort: 8080 # app inside pod
