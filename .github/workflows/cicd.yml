@@ -58,3 +58,4 @@ jobs:
         run: |
           kubectl set image deployment/springboot-cicd-eks springboot-cicd-eks=$IMAGE -n team-app
           kubectl rollout status deployment/springboot-cicd-eks -n team-app
+          
